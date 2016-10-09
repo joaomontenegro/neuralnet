@@ -1,13 +1,14 @@
 #ifndef _ARRAY_H_
 #define _ARRAY_H_
 
+#include <iostream>
 #include <stdlib.h>
 
 template<typename T> class Array
 {
 public:
 	Array() : m_size(0), m_elements(0x0) {}
-	Array(size_t size) { allocate(size); }
+	Array(size_t size) : m_elements(0x0) { allocate(size); }
 
 	~Array() { delete[] m_elements; }
 
@@ -18,7 +19,7 @@ public:
 
 	void allocate(unsigned int newSize)
 	{
-		if (m_elements != 0x0)
+	    if (m_elements != 0x0)
 		{
 			delete[] m_elements;
 		}
