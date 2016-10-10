@@ -181,106 +181,134 @@ void NeuralNet::forwardPropagate(Array<double>& inputValues)
 	}
 }
 
-void NeuralNet::backPropagate(Array<double>& inputValues, Array<double>& outputValues, double rate)
+void NeuralNet::backPropagate(Array<double>& inputValues,
+	Array<double>& outputValues, double rate, double biasRate)
 {
 	//tODO confirm output and input sizes
 	forwardPropagate(inputValues);
 
-	// A neuron: previousValue -> weight -> netValue - > value
-	// netValue is before activation func, value is after activation func
-	// We want to find the partial derivative dError/dWeight
-	// dError/dWeight = dError/dValue * dValue/dNetValue * dNetValue/dWeight
-	// Then weight -= rate * dError/dWeight (gradient descent)
+	// A neuron value model:
+	//
+	// previousValue -> weight -> net value -> value
+	//
+	// With net value being the pre-activation and value the post-activation.
+	// We want to find the contribution of a weight on the total error:
+	//
+	// [1] dError/dWeight = dError/dValue * dValue/dNetValue * dNetValue/dWeight
+	//
+	// To update a weight (gradient descent):
+	//
+	// [2] weight -= rate * dError/dWeight
+	//
+	// On each back-propagation step the error needs to be propagated to the
+	// previous layer. The values that we propagate (delta) are the contribution
+	// of the values of each neuron on the previous layer to the total error
+	// via the sinapses on each neuron of the current layer. These values are
+	// per incoming sinapse of each current layer's neuron:
+	//
+	// [3] delta = dError/dPreviousNeuronValue
+	//           = dError/dNetValue * dNetValue/dPreviousNeuronValue
+	//           = dError/dNetValue * weight
+	// 
+	// We use two arrays for the deltas. We swap them back and forth (using
+	// pointers to them) as the current array and the next layer's array. The
+	// arrays need to have a size as large as the largest number of sinapses on
+	// a layer.
+	Array<double> deltas0(m_maxSinapsesInLayer);
+	Array<double> deltas1(m_maxSinapsesInLayer);
+	Array<double>* deltas = &deltas0; // Current layer
+	Array<double>* nextLayerDeltas= &deltas1; // Next layer
 
-	// When walking back the layers the dError/dNetValues will be needed several
-	// times, so we cache them using an array that can fit the largest layer.
-	// Because we need the current values  while we building the array for the
-	// next one we will create two arrays and use two pointers that swap between
-	// them on each layer iteration
-	//TODO: IMPROVE ARRAY TO ALLOW FAST SWAP
-	Array<double> dError_dNetValues0(m_maxLayerSize);
-	Array<double> dError_dNetValues1(m_maxLayerSize);
-	Array<double>* dError_dNetValues = &dError_dNetValues0;
-	Array<double>* next_dError_dNetValues = &dError_dNetValues1;
-	
-	// Stores the weights on each iteration before the update
-	Array<double> oldWeights(m_maxSinapsesInLayer);
-
-	// We start with the output layer
+	// Delare and init a bunch of variables once only.
 	size_t outputLayer = m_neurons.size() - 1;
-	size_t layerSize = getLayerSize(outputLayer);
-	size_t previousLayer = outputLayer - 1;
-	size_t previousLayerSize = m_neurons[outputLayer - 1].size();
-	size_t sinapseIdx = 0;
+	double previousLayer = outputLayer - 1;
+	double layerSize = getLayerSize(outputLayer);
+	double previousLayerSize = getLayerSize(previousLayer);
+	double nextLayerSize = 0;
+	double value;
+	double dError_dValue;
+	double dValue_dNetValue;
+	double dError_dNetValue;
+	double dNetValue_dWeight;
+	double dError_dWeight;
+	Array<double>* tmpArray;
+	size_t sinapseIdx;
 
-	for (size_t n = 0; n < layerSize; ++n)
+	// Iterate from the output layer back to the first hidden layer (not the
+	// input - it has no weights to adjust)
+	for (size_t l = outputLayer; l > 0; --l)
 	{
-		double value = m_neurons[outputLayer][n].value;
-		double dError_dValue = value - outputValues[n];
-		double dValue_dNetValue = activationFunctionDerivative(value);
-		double dError_dNetValue = dError_dValue * dValue_dNetValue;
-
-		// Cache dError/dNetValue
-		(*next_dError_dNetValues)[n] = dError_dNetValue;
-
-		for (size_t p = 0; p < previousLayerSize; ++p)
-		{
-			Sinapse* sinapse = getSinapse(previousLayer, p, n);
-			double dError_dWeight = m_neurons[previousLayer][p].value;
-
-			// Update Output weights
-			oldWeights[sinapseIdx++] = sinapse->weight;
-			sinapse->weight -= rate * dError_dNetValue * dError_dWeight;
-		}
-	}
-
-	// Then the hidden layers
-	for (size_t l = outputLayer - 1; l > 0; --l)
-	{
-		layerSize = getLayerSize(l);
-		previousLayer = l - 1;
-		previousLayerSize = getLayerSize(previousLayer);
-		double nextLayerSize = getLayerSize(l + 1);
-
-		sinapseIdx = 0;
-
+		// Iterate throught the neurons of the layer
 		for (size_t n = 0; n < layerSize; ++n)
 		{
-			// Calculate dError_dValue by iterating the next layer
-			double dError_dValue = 0;
+			// The neuron value
+			value = m_neurons[l][n].value;
 
-			for (size_t nn = 0; nn < nextLayerSize; ++nn)
+			// The contribution of the value to the Error
+			if (l == outputLayer)
 			{
-				// Use the cached data from the previous iteration
-				dError_dValue += (*next_dError_dNetValues)[nn] * oldWeights[sinapseIdx++];
+				// Output layer: 
+				// [4] dError/dValue = (value - expected)
+				dError_dValue = value - outputValues[n];
 			}
+			else
+			{
+				// Hidden layer:
+				// [5] dError/dValue = Sum(deltas from next layer)
+				// see also equation 
+				dError_dValue = 0;
+				for (size_t nn = 0; nn < nextLayerSize; ++nn)
+				{
+					sinapseIdx = n * nextLayerSize + nn;
+					dError_dValue += (*deltas)[n * nextLayerSize + nn];
+				}
+			}						
 
-			double value = m_neurons[l][n].value;
-			double dValue_dNetValue = activationFunctionDerivative(value);
-			
-			// Cache dError_dNetValue for the previous layer to use
-			double dError_dNetValue = dError_dValue * dValue_dNetValue;
-			(*dError_dNetValues)[n] = dError_dNetValue;
+			// Calculate the dError/dNetValue:
+			// [6] dError/dNetValue = dError/dValue * dValue/dNetValue
+			dValue_dNetValue = activationFunctionDerivative(value);
+			dError_dNetValue = dError_dValue * dValue_dNetValue;
 
-			sinapseIdx = 0;
-
+			// Update the weights on each input
 			for (size_t p = 0; p < previousLayerSize; ++p)
 			{
+				// Get the sinapse and weight
 				Sinapse* sinapse = getSinapse(previousLayer, p, n);
-				double dError_dWeight = m_neurons[previousLayer][p].value;
-				
-				// Store the old weights
-				oldWeights[sinapseIdx++] = sinapse->weight;
-				
-				// Update weight
-				sinapse->weight -= rate * dError_dNetValue * dError_dWeight;
+				double weight = sinapse->weight;
+
+				// Cache the delta (see equation [3])
+				sinapseIdx = p * layerSize + n;
+				(*deltas)[sinapseIdx] = dError_dNetValue * weight;
+
+				// Calculate dError/dWeight (see equaion [1]) and update the
+				// weight (see equation [2])
+				dNetValue_dWeight = m_neurons[previousLayer][p].value;
+				dError_dWeight = dError_dNetValue * dNetValue_dWeight;
+				sinapse->weight -= rate * dError_dWeight;
 			}
+
+			// Update the bias on the neuron
+			// [7] dError/dBias = dError/dNetValue
+			m_neurons[l][n].bias -= biasRate * dError_dNetValue;
+
 		}
 
-		// Swap references
-		Array<double>* tmp = next_dError_dNetValues;
-		next_dError_dNetValues = dError_dNetValues;
-		dError_dNetValues = tmp;
+		// Update variables for the next iteration (except for the last
+		// iteration, in which the layer is 1)
+		if (l > 1)
+		{
+			previousLayer = l - 2;
+			
+			nextLayerSize = layerSize;
+			layerSize = previousLayerSize;
+			previousLayerSize = getLayerSize(previousLayer);
+
+			// Swap deltas arrays
+			// TODO: add swapping to Array
+			tmpArray = nextLayerDeltas;
+			nextLayerDeltas = deltas;
+			deltas = tmpArray;
+		}
 	}
 }
 

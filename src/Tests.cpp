@@ -156,7 +156,7 @@ int RunBackPropagateTests()
 	for (int i = 0; i < 1000; ++i)
 	{
 		errorBefore = net.error(inputs, outputs);
-		net.backPropagate(inputs, outputs, 0.5);
+		net.backPropagate(inputs, outputs, 0.5, 0.5);
 		errorAfter = net.error(inputs, outputs);
 		
 		#ifdef VERBOSE

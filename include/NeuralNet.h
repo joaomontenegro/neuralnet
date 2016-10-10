@@ -37,7 +37,7 @@ public:
 	double error(Array<double>& inputValues, Array<double>& outputValues);
 
 	void forwardPropagate(Array<double>& inputValues);
-	void backPropagate(Array<double>& inputValues, Array<double>& outputValues, double rate);
+	void backPropagate(Array<double>& inputValues, Array<double>& outputValues, double rate, double biasRate);
 	
 
 	void print();
@@ -48,6 +48,8 @@ private:
 
 	Array<NeuronArray> m_neurons;
 	Array<SinapseArray> m_sinapses;
+	Array<double> m_biases; //TODO
+
 	size_t m_maxLayerSize;
 	size_t m_maxSinapsesInLayer;
 
