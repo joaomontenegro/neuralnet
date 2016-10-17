@@ -8,13 +8,18 @@
 
 void train(int numRuns, float speedWeights, float speedBias)
 {
-	Array<size_t> layerSizes(3);
+	Array<size_t> layerSizes(4);
 	layerSizes[0] = 3;
 	layerSizes[1] = 3;
 	layerSizes[2] = 3;
+	layerSizes[3] = 3;
 
 	NeuralNet net(layerSizes);
 	net.randomize();
+
+	std::cout << "  -----------------------   " << std::endl;
+	net.print(false);
+	std::cout << std::endl;
 
 	typedef Array<double> DoubleArray;
 
@@ -56,7 +61,7 @@ void train(int numRuns, float speedWeights, float speedBias)
 		std::cout.precision(5);
 
 		double error = net.error(inputs[i], outputs[i]);
-		std::cout << "ERROR: " << error << "   | "
+		std::cout << error << "   | "
 				  << results[0] << " " << results[1] << " " << results[2] << " : "
 		          << std::endl;
 
@@ -64,6 +69,10 @@ void train(int numRuns, float speedWeights, float speedBias)
 	}
 
 	std::cout << "AVG ERROR: " << totalError / 8 << std::endl;
+
+	std::cout << std::endl;
+	net.print(false);
+	std::cout << "  -----------------------   " << std::endl;
 
 }
 

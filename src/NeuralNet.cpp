@@ -106,12 +106,12 @@ void NeuralNet::randomize()
 	{
 		for (size_t s = 0; s < m_sinapses[l].size(); ++s)
 		{
-			m_sinapses[l][s].weight = (double)rand() / (double)(RAND_MAX * 2.0 - 1.0);
+			m_sinapses[l][s].weight = ((double)rand() / (double)(RAND_MAX)) * 2.0 - 1.0 ;
 		}
 
 		for (size_t n = 0; n < m_neurons[l].size(); ++n)
 		{
-			m_neurons[l][n].bias = (double)rand() / (double)(RAND_MAX * 2.0 - 1.0);
+			m_neurons[l][n].bias = ((double)rand() / (double)(RAND_MAX)) * 2.0 - 1.0;
 		}
 	}
 }
@@ -301,27 +301,30 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 	}
 }
 
-void NeuralNet::print()
+void NeuralNet::print(bool showNeurons)
 {
 	size_t numLayers = getNumLayers();
 
-	for (size_t l = 0; l < numLayers; ++l)
+	if (showNeurons)
 	{
-		std::cout << " N" << l << ": ";
-		for (int n = 0 ; n < m_neurons[l].size(); ++n)
-		{
-			std::cout << "(" << m_neurons[l][n].value << ", " << m_neurons[l][n].bias << ") ";
-		}
+		std::cout << "N: " << std::endl;
 
-		std::cout << std::endl;
-
-		if ( l < numLayers - 1)
+		for (size_t l = 0; l < numLayers; ++l)
 		{
-			std::cout << " S" << l << ": ";
-			for (int s = 0 ; s < m_sinapses[l].size(); ++s)
+			for (int n = 0 ; n < m_neurons[l].size(); ++n)
 			{
-				std::cout << "(" << m_sinapses[l][s].weight << ") ";
+				std::cout << "(" << m_neurons[l][n].value << ", " << m_neurons[l][n].bias << ") ";
 			}
+			std::cout << std::endl;
+		}
+	}
+
+	std::cout << "S: " << std::endl;
+	for (size_t l = 0; l < numLayers - 1; ++l)
+	{
+		for (int s = 0 ; s < m_sinapses[l].size(); ++s)
+		{
+			std::cout << m_sinapses[l][s].weight << " ";
 		}
 
 		std::cout << std::endl;

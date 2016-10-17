@@ -41,7 +41,7 @@ public:
 	void backPropagate(Array<double>& inputValues, Array<double>& outputValues, double rate, double biasRate);
 	
 
-	void print();
+	void print(bool showNeurons);
 
 private:
 	typedef Array<Neuron> NeuronArray; 
