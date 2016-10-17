@@ -216,10 +216,6 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 	// pointers to them) as the current array and the next layer's array. The
 	// arrays need to have a size as large as the largest number of sinapses on
 	// a layer.
-	Array<double> deltas0(m_maxSinapsesInLayer);
-	Array<double> deltas1(m_maxSinapsesInLayer);
-	Array<double>* deltas = &deltas0; // Current layer
-	Array<double>* nextLayerDeltas= &deltas1; // Next layer
 
 	// Delare and init a bunch of variables once only.
 	size_t outputLayer = m_neurons.size() - 1;
@@ -234,7 +230,6 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 	double dNetValue_dWeight;
 	double dError_dWeight;
 	Array<double>* tmpArray;
-	size_t sinapseIdx;
 
 	// Iterate from the output layer back to the first hidden layer (not the
 	// input - it has no weights to adjust)
@@ -261,8 +256,7 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 				dError_dValue = 0;
 				for (size_t nn = 0; nn < nextLayerSize; ++nn)
 				{
-					sinapseIdx = n * nextLayerSize + nn;
-					dError_dValue += (*deltas)[sinapseIdx];
+					dError_dValue += getSinapse(l, n, nn)->delta;
 				}
 			}						
 
@@ -279,8 +273,7 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 				double weight = sinapse->weight;
 
 				// Cache the delta (see equation [3])
-				sinapseIdx = p * layerSize + n;
-				(*deltas)[sinapseIdx] = dError_dNetValue * weight;
+				sinapse->delta = dError_dNetValue * weight;
 
 				// Calculate dError/dWeight (see equaion [1]) and update the
 				// weight (see equation [2])
@@ -304,12 +297,6 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 			nextLayerSize = layerSize;
 			layerSize = previousLayerSize;
 			previousLayerSize = getLayerSize(previousLayer);
-
-			// Swap deltas arrays
-			// TODO: add swapping to Array
-			tmpArray = nextLayerDeltas;
-			nextLayerDeltas = deltas;
-			deltas = tmpArray;
 		}
 	}
 }

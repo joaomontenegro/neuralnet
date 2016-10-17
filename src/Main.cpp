@@ -6,7 +6,7 @@
 #include <sstream>
 
 
-void train(int numRuns)
+void train(int numRuns, float speedWeights, float speedBias)
 {
 	Array<size_t> layerSizes(3);
 	layerSizes[0] = 3;
@@ -37,14 +37,14 @@ void train(int numRuns)
 
 	for (unsigned int i = 0; i < numRuns; ++i)
 	{
-		net.backPropagate(inputs[i % 8], outputs[i % 8], 0.05, 0.05);
+		net.backPropagate(inputs[i % 8], outputs[i % 8], speedWeights, speedBias);
 	}
 
 	Array<double> results(3);
 
 	double totalError = 0;
 
-	for (unsigned int i = 0; i < 7; ++i)
+	for (unsigned int i = 0; i < 8; ++i)
 	{
 		net.forwardPropagate(inputs[i]);
 		net.getOutputs(results);
@@ -63,12 +63,12 @@ void train(int numRuns)
 		totalError += error;
 	}
 
-	std::cout << "AVG ERROR: " << totalError / 7 << std::endl;
+	std::cout << "AVG ERROR: " << totalError / 8 << std::endl;
 
 }
 
 
-void train2(int numRuns)
+void train2(int numRuns, float speedWeights, float speedBias)
 {
 	Array<size_t> layerSizes(3);
 	layerSizes[0] = 2;
@@ -99,7 +99,7 @@ void train2(int numRuns)
 
 	for (unsigned int i = 0; i < numRuns; ++i)
 	{
-		net.backPropagate(inputs[i % inputs.size()], outputs[i % outputs.size()], 0.5, 0.5);
+		net.backPropagate(inputs[i % inputs.size()], outputs[i % outputs.size()], speedWeights, speedBias);
 	}
 
 	Array<double> results(outputs[0].size());
@@ -113,7 +113,7 @@ void train2(int numRuns)
 		          << " -> "
 		          << round(results[0]) << " : ";
 
-		std::cout.precision(5);
+		std::cout.precision(3);
 		
 		std::cout << "ERROR: " << net.error(inputs[i], outputs[i]) << "   | "
 				  << results[0]
@@ -126,12 +126,30 @@ int main(int argc, char* argv[])
 	//RunAllTests();
 
 	int numRuns = 1000;
+	double speedWeights = 0.2;
+	double speedBias = 0.2;
+
 	if (argc > 1)
 	{
-		std::stringstream convert(argv[1]);
-		convert >> numRuns;
+		std::stringstream convertNumRuns(argv[1]);
+		convertNumRuns >> numRuns;
 	}
-	train(numRuns);
+
+	if (argc > 2)
+	{
+		std::stringstream convertSpeedWeight(argv[2]);
+		convertSpeedWeight >> speedWeights;
+	}
+
+	if (argc > 3)
+	{
+		std::stringstream convertSpeedBias(argv[3]);
+		convertSpeedBias >> speedBias;
+
+	}
+	train(numRuns, speedWeights, speedBias);
+
+	//train2(numRuns, speedWeights, speedBias);
 
 	return 0;
 }

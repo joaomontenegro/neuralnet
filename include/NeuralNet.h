@@ -18,6 +18,7 @@ public: //typedefs
 	typedef struct
 	{
 		double weight;
+		double delta;
 	} Sinapse;
 
 public:
