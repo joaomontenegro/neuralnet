@@ -37,10 +37,12 @@ void train(int numRuns)
 
 	for (unsigned int i = 0; i < numRuns; ++i)
 	{
-		net.backPropagate(inputs[i % 8], outputs[i % 8], 0.5, 0.5);
+		net.backPropagate(inputs[i % 8], outputs[i % 8], 0.05, 0.05);
 	}
 
 	Array<double> results(3);
+
+	double totalError = 0;
 
 	for (unsigned int i = 0; i < 7; ++i)
 	{
@@ -52,11 +54,17 @@ void train(int numRuns)
 		          << round(results[0]) << " " << round(results[1]) << " " << round(results[2]) << " : ";
 
 		std::cout.precision(5);
-		
-		std::cout << "ERROR: " << net.error(inputs[i], outputs[i]) << "   | "
+
+		double error = net.error(inputs[i], outputs[i]);
+		std::cout << "ERROR: " << error << "   | "
 				  << results[0] << " " << results[1] << " " << results[2] << " : "
 		          << std::endl;
+
+		totalError += error;
 	}
+
+	std::cout << "AVG ERROR: " << totalError / 7 << std::endl;
+
 }
 
 

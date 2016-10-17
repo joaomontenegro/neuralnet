@@ -9,6 +9,8 @@ NeuralNet::NeuralNet(Array<size_t>& neuronsPerLayer) : m_maxLayerSize(0), m_maxS
 {
 	size_t numLayers = neuronsPerLayer.size();
 
+	//srand(0);
+
 	m_neurons.allocate(numLayers);
 	m_sinapses.allocate(numLayers - 1);
 
@@ -260,7 +262,7 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 				for (size_t nn = 0; nn < nextLayerSize; ++nn)
 				{
 					sinapseIdx = n * nextLayerSize + nn;
-					dError_dValue += (*deltas)[n * nextLayerSize + nn];
+					dError_dValue += (*deltas)[sinapseIdx];
 				}
 			}						
 
@@ -297,7 +299,7 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 		// iteration, in which the layer is 1)
 		if (l > 1)
 		{
-			previousLayer = l - 2;
+			previousLayer--;
 			
 			nextLayerSize = layerSize;
 			layerSize = previousLayerSize;

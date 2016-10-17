@@ -119,14 +119,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Array.h" />
-    <ClInclude Include="NeuralNet.h" />
+    <ClInclude Include="include\Array.h" />
+    <ClInclude Include="include\NeuralNet.h" />
+    <ClInclude Include="include\SimpleNeuralNet.h" />
+    <ClInclude Include="include\Tests.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Tests.h" />
-    <ClCompile Include="NeuralNet.cpp" />
-    <ClCompile Include="Tests.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\NeuralNet.cpp" />
+    <ClCompile Include="src\SimpleNeuralNet.cpp" />
+    <ClCompile Include="src\Tests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
