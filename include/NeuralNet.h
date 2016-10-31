@@ -22,6 +22,7 @@ public: //typedefs
 	} Sinapse;
 
 public:
+	NeuralNet();
 	NeuralNet(Array<size_t>& neuronsPerLayer);
 	virtual ~NeuralNet();
 
@@ -40,7 +41,8 @@ public:
 	void forwardPropagate(Array<double>& inputValues);
 	void backPropagate(Array<double>& inputValues, Array<double>& outputValues, double rate, double biasRate);
 	
-
+	bool save(const char* filepath);
+	bool load(const char* filepath);
 	void print(bool showNeurons);
 
 private:

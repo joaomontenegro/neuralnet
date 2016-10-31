@@ -4,6 +4,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <fstream>
+
+NeuralNet::NeuralNet() : m_maxLayerSize(0), m_maxSinapsesInLayer(0) {}
 
 NeuralNet::NeuralNet(Array<size_t>& neuronsPerLayer) : m_maxLayerSize(0), m_maxSinapsesInLayer(0)
 {
@@ -300,6 +303,117 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 			previousLayerSize = getLayerSize(previousLayer);
 		}
 	}
+}
+
+bool NeuralNet::save(const char* filepath)
+{
+	std::ofstream ofs(filepath, std::ios::out);
+	if (!ofs.is_open())
+    {
+    	std::cerr << " *** Could not open " << filepath
+    	          << "!" << std::endl;
+    	return false;
+    }
+
+    size_t layers = m_neurons.size();
+
+    ofs << layers << std::endl;
+
+	for (size_t l = 0; l < layers; ++l)
+	{
+		ofs << m_neurons[l].size() << " ";
+	}
+	ofs << std::endl;
+
+	for (size_t l = 0; l < layers - 1; ++l)
+	{
+		ofs << m_sinapses[l].size() << " ";
+
+	}
+	ofs << std::endl;
+
+
+	for (size_t l = 0; l < layers; ++l)
+	{
+		for (int n = 0 ; n < m_neurons[l].size(); ++n)
+		{
+			ofs << m_neurons[l][n].value << " ";
+		}
+		ofs << std::endl;
+
+		for (int n = 0 ; n < m_neurons[l].size(); ++n)
+		{
+			ofs << m_neurons[l][n].bias << " ";
+		}
+		ofs << std::endl;
+
+		if (l < layers - 1)
+		{
+			for (int s = 0 ; s < m_sinapses[l].size(); ++s)
+			{
+				ofs << m_sinapses[l][s].weight << " ";
+			}
+			ofs << std::endl;
+		}
+	}
+
+	ofs.close();
+	return true;
+}
+
+bool NeuralNet::load(const char* filepath)
+{
+	std::ifstream ifs(filepath, std::ios::in);
+	if (!ifs.is_open())
+    {
+    	std::cerr << " *** Could not open " << filepath
+    	          << "!" << std::endl;
+    	return false;
+    }
+
+    size_t layers;
+    ifs >> layers;
+    m_neurons.allocate(layers);
+    m_sinapses.allocate(layers);
+    
+	for (size_t l = 0; l < layers; ++l)
+	{
+		size_t neurons;
+		ifs >> neurons;
+		m_neurons[l].allocate(neurons);
+	}
+
+	for (size_t l = 0; l < layers - 1; ++l)
+	{
+		size_t sinapses;
+		ifs >> sinapses;
+		m_sinapses[l].allocate(sinapses);
+
+	}
+
+	for (size_t l = 0; l < layers; ++l)
+	{
+		for (int n = 0 ; n < m_neurons[l].size(); ++n)
+		{
+			ifs >> m_neurons[l][n].value;
+		}
+
+		for (int n = 0 ; n < m_neurons[l].size(); ++n)
+		{
+			ifs >> m_neurons[l][n].bias;
+		}
+
+		if (l < layers - 1)
+		{
+			for (int s = 0 ; s < m_sinapses[l].size(); ++s)
+			{
+				ifs >> m_sinapses[l][s].weight;
+			}
+		}
+	}
+
+	ifs.close();
+	return true;
 }
 
 void NeuralNet::print(bool showNeurons)

@@ -88,7 +88,7 @@ public:
 
 		Array<size_t> layerSizes(3);
 		layerSizes[0] = width * height;
-		layerSizes[1] = 15;
+		layerSizes[1] = 50;
 		layerSizes[2] = NUM_LABELS;
 
 		if (net != 0x0)
@@ -140,6 +140,17 @@ public:
 		return net;
 	}
 
+	NeuralNet* load(std::string filepath)
+	{
+		if (net != 0x0)
+		{
+			delete net;
+		}
+
+		net = new NeuralNet();
+		net->load(filepath.c_str());
+	}
+
 	uint32_t detect(PixelArray& image)
 	{
 		Array<double> inputs(width * height);
@@ -171,9 +182,43 @@ public:
 		return detectedLabel;
 	}
 
+	double runTestSet(std::string labelsPath, std::string imagesPath)
+	{
+		readTestImages(labelsPath, imagesPath);
+
+		int totalDetected = 0;
+
+		for (size_t l = 0; l < NUM_LABELS; l++)
+		{
+			for (size_t i = 0; i < images[l].size(); i++)
+			{
+				uint32_t detected = detect(images[l][i]);
+
+				if (detected == l)
+				{
+					totalDetected++;
+					std::cout << "Yes:  ";
+
+				}
+				else
+				{
+					std::cout << "No :  ";
+				}
+
+				std::cout << l << " / " << detected << std::endl;
+
+			}
+		}
+
+		return 1.0 - ((double)totalDetected) / numImages;
+	}
+
+
 private:
 	bool readTestLabels(std::string filepath, Array<uint8_t>& labels)
 	{
+		std::cout << "Reading Test Labels: " << filepath << std::endl;
+
 		// Open file
 		std::ifstream ifs(filepath.c_str(), std::ios::in|std::ios::binary);
 		if (!ifs.is_open())
@@ -226,6 +271,8 @@ private:
 			return false;
 		}
 
+		std::cout << "Reading Test Images: " << imagesFilepath << std::endl;
+
 		// Open file
 		std::ifstream ifs(imagesFilepath.c_str(), std::ios::in|std::ios::binary);
 		if (!ifs.is_open())
@@ -277,7 +324,7 @@ private:
 
 	    // Count the occurrences of each label
 	    Array<size_t> occurrences(NUM_LABELS);
-	    memset(occurrences.getRef(0), 0, NUM_LABELS);
+	    memset(occurrences.getRef(0), 0, NUM_LABELS * sizeof(size_t));
 	    for (size_t i = 0; i < labels.size(); ++i)
 	    {
 	    	occurrences[labels[i]]++;
