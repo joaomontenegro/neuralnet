@@ -74,28 +74,26 @@ NeuralNet::Sinapse* NeuralNet::getSinapse(size_t layer, size_t neuronIndexFrom, 
 	return &m_sinapses[layer][index];
 }
 
-void NeuralNet::set(Array<Neuron>& neurons, Array<Sinapse>& sinapses)
+void NeuralNet::set(Array<double>& bias, Array<Sinapse>& sinapses)
 {
 	//TODO test sizes
 
 	size_t i = 0;
-
-	for (size_t l = 0; l < m_neurons.size(); ++l)
-	{
-		for (size_t n = 0; n < m_neurons[l].size(); ++n)
-		{
-			m_neurons[l][n] = neurons[i++];
-		}
-	}
-
-	i = 0;
+	size_t j = 0;
 	for (size_t l = 0; l < m_sinapses.size(); ++l)
 	{
 		for (size_t s = 0; s < m_sinapses[l].size(); ++s)
 		{
 			m_sinapses[l][s] = sinapses[i++];
 		}
-	}	
+
+
+		for (size_t n = 0; n < m_neurons[l].size(); ++n)
+		{
+			m_neurons[l][n].bias = bias[j++];
+		}
+	}
+
 }
 
 void NeuralNet::randomize()
@@ -113,7 +111,9 @@ void NeuralNet::randomize()
 		{
 			m_neurons[l][n].bias = ((double)rand() / (double)(RAND_MAX)) * 2.0 - 1.0;
 		}
+
 	}
+	
 }
 
 double NeuralNet::activationFunction(double value)
@@ -164,15 +164,15 @@ void NeuralNet::forwardPropagate(Array<double>& inputValues)
 		// Current layer's neurons
 		for (size_t n = 0; n < numNeurons; ++n) 
 		{
-			double value = 0;
-			double bias = m_neurons[l][n].bias;
+			// Initialize with the bias value
+			double value = m_neurons[l][n].bias;
 
 			// Previous layer's neurons
 			for (size_t p = 0; p < numPreviousNeurons; ++p)
 			{
 				Sinapse* sinapse = getSinapse(l - 1, p, n);
 				double previousValue = m_neurons[l - 1][p].value;
-				value += previousValue * sinapse->weight + bias;
+				value += previousValue * sinapse->weight;
 			}
 
 			// Update neuron value
@@ -280,6 +280,7 @@ void NeuralNet::backPropagate(Array<double>& inputValues,
 				dNetValue_dWeight = m_neurons[previousLayer][p].value;
 				dError_dWeight = dError_dNetValue * dNetValue_dWeight;
 				sinapse->weight -= rate * dError_dWeight;
+
 			}
 
 			// Update the bias on the neuron
@@ -307,27 +308,40 @@ void NeuralNet::print(bool showNeurons)
 
 	if (showNeurons)
 	{
-		std::cout << "N: " << std::endl;
+		std::cout << "Values: " << std::endl;
 
 		for (size_t l = 0; l < numLayers; ++l)
 		{
 			for (int n = 0 ; n < m_neurons[l].size(); ++n)
 			{
-				std::cout << "(" << m_neurons[l][n].value << ", " << m_neurons[l][n].bias << ") ";
+				std::cout << m_neurons[l][n].value << " ";
 			}
 			std::cout << std::endl;
 		}
+		std::cout << std::endl;
 	}
 
-	std::cout << "S: " << std::endl;
+
+	std::cout << "Biases: " << std::endl;
+	for (size_t l = 0; l < numLayers; ++l)
+	{
+		for (int n = 0 ; n < m_neurons[l].size(); ++n)
+		{
+			std::cout << m_neurons[l][n].bias << " ";
+		}
+	}
+	std::cout << std::endl;
+
+
+	std::cout << "Weights: " << std::endl;
 	for (size_t l = 0; l < numLayers - 1; ++l)
 	{
 		for (int s = 0 ; s < m_sinapses[l].size(); ++s)
 		{
 			std::cout << m_sinapses[l][s].weight << " ";
 		}
-
 		std::cout << std::endl;
 	}
+	std::cout << std::endl;
 }
 

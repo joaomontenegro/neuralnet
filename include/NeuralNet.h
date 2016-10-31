@@ -29,7 +29,7 @@ public:
 	size_t getLayerSize(size_t layer);
 	void getOutputs(Array<double>& values);
 
-	void set(Array<Neuron>& neurons, Array<Sinapse>& sinapses);
+	void set(Array<double>& bias, Array<Sinapse>& sinapses);
 	void randomize();
 
 	static double activationFunction(double value);
@@ -49,7 +49,6 @@ private:
 
 	Array<NeuronArray> m_neurons;
 	Array<SinapseArray> m_sinapses;
-	Array<double> m_biases; //TODO
 
 	size_t m_maxLayerSize;
 	size_t m_maxSinapsesInLayer;

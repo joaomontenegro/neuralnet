@@ -39,18 +39,19 @@ int RunForwardPropagateTests()
 	sinapses[14].weight = 1.5;
 	sinapses[15].weight = 1.6;
 
-	Array<NeuralNet::Neuron> neurons;
-	neurons.allocate(9);
-	neurons[0].bias = 0;
-	neurons[1].bias = 0;
-	neurons[2].bias = 0;
-	neurons[3].bias = 0;
-	neurons[4].bias = 0;
-	neurons[5].bias = 0;
-	neurons[6].bias = 0;
-	neurons[7].bias = 0;
-	neurons[8].bias = 0;
+	Array<double> bias;
+	bias.allocate(9);
+	bias[0] = 0;
+	bias[1] = 0;
+	bias[2] = 0;
+	bias[3] = 0;
+	bias[4] = 0;
+	bias[5] = 0;
+	bias[6] = 0;
+	bias[7] = 0;
+	bias[8] = 0;
 
+	
 	#ifdef VERBOSE
 	net.print();
 	#endif
@@ -61,7 +62,7 @@ int RunForwardPropagateTests()
 	net.print();
 	#endif
 
-	net.set(neurons, sinapses);
+	net.set(bias, sinapses);
 
 	#ifdef VERBOSE
 	net.print();
@@ -126,19 +127,19 @@ int RunBackPropagateTests()
 	sinapses[14].weight = 1.5;
 	sinapses[15].weight = 1.6;
 
-	Array<NeuralNet::Neuron> neurons;
-	neurons.allocate(9);
-	neurons[0].bias = 0;
-	neurons[1].bias = 0;
-	neurons[2].bias = 0;
-	neurons[3].bias = 0;
-	neurons[4].bias = 0;
-	neurons[5].bias = 0;
-	neurons[6].bias = 0;
-	neurons[7].bias = 0;
-	neurons[8].bias = 0;
+	Array<double> bias;
+	bias.allocate(9);
+	bias[0] = 0;
+	bias[1] = 0;
+	bias[2] = 0;
+	bias[3] = 0;
+	bias[4] = 0;
+	bias[5] = 0;
+	bias[6] = 0;
+	bias[7] = 0;
+	bias[8] = 0;
 
-	net.set(neurons, sinapses);
+	net.set(bias, sinapses);
 
 	Array<double> inputs;
 	Array<double> outputs;
